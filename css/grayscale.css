@@ -155,6 +155,14 @@ a:focus {
     -o-background-size: cover;
 }
 
+#intro-mountains {
+    background: url(../img/canadian-mountains.jpg) no-repeat bottom center scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
 .intro .intro-body {
     display: table-cell;
     vertical-align: middle;
@@ -181,6 +189,11 @@ a:focus {
     .intro .intro-body .intro-text {
         font-size: 26px;
     }
+}
+
+.blog-img {
+    max-width:100%; 
+    height:auto;
 }
 
 .btn-circle {
