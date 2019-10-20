@@ -163,6 +163,14 @@ a:focus {
     -o-background-size: cover;
 }
 
+#intro-brighton {
+    background: url(../img/brighton-beach.jpg) no-repeat bottom center scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
 .intro .intro-body {
     display: table-cell;
     vertical-align: middle;
