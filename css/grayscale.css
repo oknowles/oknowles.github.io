@@ -57,6 +57,12 @@ a:focus {
     color: #1d9b6c;
 }
 
+.article-text {
+    margin: 0 0 25px;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
 .light {
     font-weight: 400;
 }
@@ -165,6 +171,14 @@ a:focus {
 
 #intro-brighton {
     background: url(../img/brighton-beach.jpg) no-repeat bottom center scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
+#intro-poker {
+    background: url(../img/poker.jpg) no-repeat bottom center scroll;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>Oliver Knowles</title>
+
+	<!-- Bootstrap Core CSS -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- Custom CSS -->
+	<link href="css/grayscale.css" rel="stylesheet">
+
+	<!-- Custom Fonts -->
+	<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<link href='https://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+
+</head>
+
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+
+	<!-- Navigation -->
+	<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+    	<div class="container">
+        	<!-- Collect the nav links, forms, and other content for toggling -->
+        	<div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+            	<ul class="nav navbar-nav">
+                	<!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                	<li class="hidden">
+                    	<a href="#page-top"></a>
+                	</li>
+                	<li>
+                    	<a class="page-scroll" href="index.html">Home</a>
+                	</li>
+            	</ul>
+        	</div>
+        	<!-- /.navbar-collapse -->
+    	</div>
+    	<!-- /.container -->
+	</nav>
+
+	<!-- Intro Header -->
+	<header id="intro-poker" class="intro">
+    	<div class="intro-body">
+        	<div class="container">
+            	<div class="row">
+                	<div class="col-md-8 col-md-offset-2">
+                    	<h1 class="brand-heading">Mental Poker</h1>
+                    	<p class="intro-text"></p>
+                    	<a href="#blog-body" class="btn btn-circle page-scroll">
+                        	<i class="fa fa-angle-double-down animated"></i>
+                    	</a>
+                	</div>
+            	</div>
+        	</div>
+    	</div>
+	</header>
+
+	<!-- Blog Text -->
+	<section id="blog-body" class="container content-section text-left">
+    	<div class="row">
+        	<div class="col-lg-8 col-lg-offset-2">
+            	<h2>Introduction</h2>
+
+<p>Although my aspirations of becoming a trillionaire from playing online poker in my pants all day has long since died, it is still a game that interests me. Unlike most other casino games where the player is unfairly up against the house in a game of chance, poker is a game of skill with “only” the other players and the house rake to overcome.</p>
+
+<p><i>(I should probably say can be a game of skill here. There is obviously still a healthy amount of luck involved and it is more than possible to play randomly or poorly over a given period and still win. The odds of winning tend to zero with this approach as the duration of the period increases.)</i></p>
+
+<p>The house rake is paid in exchange for the hosting and dealing the game. The dealer is assumed to be a player-independent entity that is completely trusted and, in a brick and mortar casino, every player can physically watch the dealer to ensure that no funny business occurs. Obviously any dealer trained in card manipulation could unfairly deal to most players unnoticed, but no casino would realistically consider this approach due to laws, player retention and the simple fact that such a scheme would not scale well.
+</p>
+
+<p>In the world of online poker the dealing is far more “black box”, with the players having to trust that the hosting companies have implemented correct and fair RNG and that their systems have not been compromised. As with brick and mortar casinos, the legal implications against any major site running rigged games are severe enough to prevent this from being a serious possibility, however attacks and exploits are a far bigger issue in the online world. This is because, unlike the live games, most attacks <i>would</i> scale well. If a user or group can compromise a server, table or game once then they can probably do it multiple times without much more effort.</p>
+
+<p>Although the world of online poker has generally pretty resilient against attacks, there have been several incidents over the years such as <a href="https://en.wikipedia.org/wiki/Cereus_Poker_Network">hackers gaining “superuser” abilities and seeing opponents hole cards</a>, <a href="https://en.wikipedia.org/wiki/United_States_v._Scheinberg">major sites being taken down</a> and even <a href="https://pdfs.semanticscholar.org/b0b5/7844eab28f3639a419b9d322a9a74a0498bf.pdf">honest sites getting their RNG wrong</a>. Even ignoring the the tin-foil hat wearing conspiracy theorists who claim the sites juice up the games to increase the action, it seems plausible that the major sites are theoretically open to abuse.</p>
+
+<p>A player trusting a poker site essentially boils down to the player In online play you have to receive a card and trust that the central server has dealt this fairly and the random number generation has not been tampered with in any way. As far as I know, the main sites do not publish their RNG methods, rather just refer to their certification from an independent authority responsible for testing and certifying the randomness. The main issue here is that the regulations do not require this certificate to be updated regularly. For example, PokerStars - currently the largest site - has their RNG certified once every <i>5 years</i>.</p>
+
+<p>These issues could be removed (and replaced with different issues!) if instead we could play a game of poker <i>without</i> a dealer at all. That is, have all players contribute to the shuffling and dealing with each player happy that all cards are truly random and that no other players have knowledge about their cards. A further benefit of this would be the removal or rake - if there is no central server to host and deal the cards then there is no central authority to pay for the privilege of playing.</p>
+
+<p>The idea of “mental poker” was introduced by Rivest, Shamir & Adleman in the <a href="https://apps.dtic.mil/dtic/tr/fulltext/u2/a066331.pdf">1979 whitepaper</a>. In the paper they ask (and answer) the question:</p>
+
+<p><i><q>Can two potentially dishonest players play a fair game of poker without using any cards (e.g. over the phone)?</q></i></p>
+
+<p>Spoiler alert - the answer is yes. There are two main approaches to dealing a hand of poker in a distributed manner:</p>
+
+<p><ol class="article-text">
+	<li><b>Perform a distributed shuffle of the deck</b> - just like live games, a card is dealt by taking from the top.</li>
+	<li><b>Use random card selection</b> - perform no initial shuffle, instead dealing a card by randomly picking from the deck.</li>
+</ol></p>
+
+
+<h2>Distributed Shuffle</h2>
+
+<p>This approach attempts to recreate the live dealing approach using a distributed shuffle via player specific encryption keys. Each player shuffles the deck, encrypts each card (thus hiding the card value) before passing on to the next player. Once every player has shuffled the deck they remove their “shuffle lock” by decrypting each card, places a “final lock” on each card by re-encrypting using a set of 52 ordered keys before passing to the next person. This process continues until the deck is in its final form, with each card encrypted by every players “final lock” for that given position.</p>
+
+<p>As a card can be revealed by collectively decrypting using all players “final lock” for that card, dealing a face up card can be done via ensuring all players discover all locks for that card. Dealing a card face down to a player \(i\) can be via ensuring that all other players share their lock with player \(i\).</p>
+
+<p>This two phase distributed shuffle provides some desirable outcomes. The shuffle-lock step ensures that, as long as a single player performs a truly random shuffle, the deck can be considered fair. That is, if any given player is happy that they performed a random shuffle then they do not need to worry about the other players performing a proper shuffle. The order locking step ensures that the deck cannot be reordered once shuffled - if a malicious player attempts to reorder the deck either before or after they have applied their ordered locks then the decryption keys will be invalid and revealing of cards will become impossible.</p>
+
+<h3>Steps to perform the initial shuffle</h3>
+
+<p>Assuming that three players, Alice, Bob and Charlie are wanting to play a game of poker. The approach is outlined as follows:</p>
+
+<p><ol class="article-text">
+	<li>Alice generates a 52 card deck on her machine, shuffles it, encrypts each card with her shuffle key \(A_s\) and then sends the deck to Bob.</li>
+	<li>Similarly Bob shuffles the deck of encrypted cards, encrypts each card again with his shuffle key \(B_s\) and then sends to Charlie.</li>
+	<li>Finally Charlie shuffles the deck of doubly encrypted cards and encrypts each card with his shuffle key \(C_s\).</li>
+</ol></p>
+
+<p>As the deck is now adequetly shuffled the participants now need to collectively lock the ordering. This can be done as follows:</p>
+
+<p><ol class="article-text">
+	<li>Charlie sends the triple-encrypted deck to Alice who removes each of her shuffle locks \(A_s\) and subsequently encrypts each card with her unique, order-specific locks \(A_1, A_2, ..., A_{52}\).</li>
+	<li>Alice sends the deck to Bob, who similarly removes his shuffle locks \(B_s\) and encrypts each card with his order-specific locks \(B_1, B_2, ..., B_{52}\).</li>
+	<li>Bob sends the deck to Charlie who removes his shuffle locks \(C_s\) using his order-specific locks \(C_1, C_2, ..., C_{52}\).</li>
+</ol></p>
+
+<p>The deck is now fully encrypted and in its final form. Assuming that there is at least one non-malicious player who performs a valid shuffle, no players should have any idea about the ordering of the cards, and each card can only be decrypted by all players collectively.</p>
+
+<h3>Dealing a card face down (to a player)</h3>
+
+<p>In order to deal a card face down to a given player, all other participants share their decryption key for that card with that player. For example, if Alice is first in the order and is assigned the top two cards from the shuffled deck \((1,2)\) then Bob and Charlie would send their accompanying decryption keys to the card locks \((B_1, B_2)\) and \((C_1, C_2)\) with Alice. Alice can now see the unencrypted versions of her encrypted cards \((\alpha_1, \alpha_2)\) by utilising all decryption keys:
+
+\[card_1 = Decrpyt(\alpha_1) = Decrypt_{A_1}(Decrypt_{B_1}(Decrypt_{C_1}(\alpha_1))\]
+\[card_2 = Decrpyt(\alpha_2) = Decrypt_{A_2}(Decrypt_{B_2}(Decrypt_{C_2}(\alpha_2))\]
+</p>
+
+<p>As only Alice knows all the decryption keys for cards \((1,2)\) then only she can see the unencrypted values. For any other player to view her cards they would have to gain access to her secret decryption keys \((A_1, A_2)\).</p>
+
+<h3>Dealing a card face up (to the table)</h3>
+
+<p>Dealing the face up table cards for the flop, turn and river is a simplified version of the above. In order to collectively reveal card \(i\), all players reveal their decryption key for card \(i\).</p>
+
+<h2>Random Card Selection</h2>
+
+<p>Clearly shuffling the deck before dealing is required in brick and mortar games - there is no way for the dealer to pluck a random card from a deck - so the shuffled deck allows them to pick a random card by selecting the top card. However in the digital world there is no physical deck and picking a random card becomes simple - we can just randomly pick a number between 0 and 51.</p>
+
+<p>As well as being conceptually simpler, randomly choosing each card on demand can provide some efficiency gains over the shuffle-deal approach. Shuffling the entire deck can be thought of as assigning each card a random position in the deck. However as the cards in play only represent a small subset of the entire deck a lot of the computations will be redundant (Assuming we aren’t playing some crazy 23-player game). Without the shuffle step, the number of individual encryption steps is greatly reduced.</p>
+
+<p>This approach introduces a few more challenges than the distributed shuffle approach. All players must be able to collectively choose a random card, without any of the players knowing any information about the card. The protocol to randomly choose a card also needs to ensure that there are no collisions with the other cards currently in play. That is, there needs to be a way to check if the proposed, encrypted (unknown) random card is within the list of encrypted, also unknown cards currently in play whilst not revealing any information about the cards in play or the proposed card. Easy peasy...</p>
+
+<p>Once these <i>simple</i> problems have been solved then dealing can be done using a similar approach to above. Player \(i\) can be dealt a card by having all other players share their decryption key with player \(i\). Thankfully, Philippe Golle has done a lot of the heavy lifting in his paper <a href="https://crypto.stanford.edu/~pgolle/papers/poker.pdf">Dealing Cards in Poker Games</a>.</p>
+
+<h3>Choosing the card</h3>
+
+<p>The fundamental idea behind the distributed card generation is to have each player randomly choose a card \(c_i\) in the form of a number between 0 and 51. The final random card choice \(c\) can then be determined by collecting and summing all card choices up and taking the modulo 52:
+
+\[c = \sum_i c_i \mod 52\]
+</p>
+
+<p>Obviously the players cannot know others choices or the final chosen card value so all values must be hidden via encryption. One way to achieve this is to use a homomorphic encryption scheme such that, for two card choices \(c_1\) and \(c_2\), \(E(c_1+c_2) = E(c_1)E(c_2)\). The ElGamal encryption scheme is multiplicatively homomorphic, meaning that \(E(xy) = E(x)E(y)\). Although this doesn’t appear helpful at first, it can be combined with some card choice mapping function \(g^{c_i}\) to transform it into an additively homomorphic scheme required above.</p>
+
+<h3>Hiding the choices</h3>
+
+<p>With the above, each player can randomly choose a card \(c_i \in [0,...,51]\) and encrypt it to get \(E(c_i)\) and hide the information. The final card choice \(c\) can be computed (ignoring modulo 52 for now) by combining all encrypted card choices:
+\[E(c) = E(\sum_i c_i) = \prod_i E(c_i)\]</p>
+
+<p>However, as well as hiding individual players choices from external parties we also need to ensure that each player can only see their encryptions and not others. This can be achieved using distributed encryption keys, whereby all players know the shared public key but the private key is split into parts with each player owning a unique part. This ensures that each player can encrypt their choice \(E(c_i)\) such that all other players cannot decrypt it, and the combined result \(E(c)\) can only be decrypted via combining all secret key parts.</p>
+
+<p>As mentioned in the Golle paper, <a href="https://www.cryptoworkshop.com/ximix/lib/exe/fetch.php?media=pedersen.pdf">Pedersen’s protocol</a> can be used to generate a distributed ElGamal encryption key pair.</p>
+
+<p>A <a href="https://en.wikipedia.org/wiki/Commitment_scheme">cryptographic commitment scheme</a> can be used to further hide each players choices. This enables each player to publicly commit to a particular encrypted card value and reveal the actual value at a later date. This adds another layer of redundancy against any attacks that allowed a player to use all other players card choices to influence their choice and determine the final card value.</p>
+
+<h3>Detecting collisions</h3>
+
+<p>In order to preserve the secrecy of previously dealt cards, each new card generated must be randomly chosen from the entire pool of cards. This presents a problem however as the same card cannot be dealt twice. To ensure this does not happen there must be a way to detect whether an encrypted, randomly chosen card has already been dealt.</p>
+
+<p>As discussed in the Golle paper, an oblivious test of plaintext equality can be used to compare the proposed encrypted card choice value with the list of encrypted previously dealt cards. If a collision occurs then the proposed card can be discarded and the card choice process can be rerun.</p>
+
+<h3>Steps to choose and deal a card</h3>
+
+<p>To setup a game a distributed key pair is generated with each player learning their private key part. At the beginning of each hand the players initialise a list of encrypted cards currently in play \(L\). A card can be dealt using the following approach:</p>
+
+<p><ol class="article-text">
+	<li>Each player randomly chooses \(c_i \in [0,51]\), computes \(E(c_i)\) then publishes a commitment to \(E(c_i)\).</li>
+	<li>Once all commitments have been published, each player reveals their encrypted card choices \(E(c_i)\). All players can verify that all commitments are correct, allowing any dishonest players to be excluded and the honest players to restart.</li>
+	<li>All players compute \(E(c) = E(\sum_i c_i) = \prod E(c_i)\)</li>
+	<li>The players check if \(E(c) \in L\) using an oblivious test of plaintext equality. If so, the card choice is discarded and the process restarts from step 1</li>
+	<li>\(E(c)\) is added to \(L\). To deal the card face up, the players can jointly decrypt it and compute \(c \mod 52\). To deal the card face down to player \(P_j\), all other players partially decrypt \(E(c)\) using their private key part and send to \(P_j\) who can then combine all responses and privately perform the final decryption using their private key part.</li>
+</ol></p>
+
+<h2>Summary</h2>
+
+<p>Although this post is beginning to give War & Peace a run for its money, it has outlined the two basic approaches to playing mental poker. Given the requirements and properties of the game, there is one piece of technology that appears like a very good fit for this - <i>BLOCKCHAIN</i>. I plan to delve into this further in future posts. I have also left out any discussion about one glaring issue with both approaches - player dropout, however this is a rabbit hole that deserves its own post.</p>
+
+        	</div>
+    	</div>
+	</section>
+
+	<!-- Footer -->
+	<footer>
+    	<div class="container text-center">
+        	<p>Oliver Knowles &copy; <script>document.write((new Date).getYear()+1900)</script></p>
+    	</div>
+	</footer>
+
+	<!-- jQuery -->
+	<script src="js/jquery.js"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="js/bootstrap.min.js"></script>
+
+	<!-- Plugin JavaScript -->
+	<script src="js/jquery.easing.min.js"></script>
+
+	<!-- Custom Theme JavaScript -->
+	<script src="js/grayscale.js"></script>
+
+	<!-- MathJax for mathematical notation -->
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+	<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</body>
+
+</html>
