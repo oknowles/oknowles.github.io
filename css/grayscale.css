@@ -57,6 +57,10 @@ a:focus {
     color: #1d9b6c;
 }
 
+small {
+  font-size: 8px;
+}
+
 .article-text {
     margin: 0 0 25px;
     font-size: 18px;
@@ -179,6 +183,14 @@ a:focus {
 
 #intro-poker {
     background: url(../img/poker.jpg) no-repeat bottom center scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
+#intro-2019-review {
+    background: url(../img/water-dive.jpg) no-repeat bottom center scroll;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
