@@ -158,7 +158,7 @@
 
 <h3>Hiding the choices</h3>
 
-<p>With the above, each player can randomly choose a card \(c_i \in [0,...,51]\) and encrypt it to get \(E(c_i)\) and hide the information. The final card choice \(c\) can be computed (ignoring modulo 52 for now) by combining all encrypted card choices:
+<p>With the above, each player can randomly choose a card \(c_i \in {0,...,51}\) and encrypt it to get \(E(c_i)\) and hide the information. The final card choice \(c\) can be computed (ignoring modulo 52 for now) by combining all encrypted card choices:
 \[E(c) = E(\sum_i c_i) = \prod_i E(c_i)\]</p>
 
 <p>However, as well as hiding individual players choices from external parties we also need to ensure that each player can only see their encryptions and not others. This can be achieved using distributed encryption keys, whereby all players know the shared public key but the private key is split into parts with each player owning a unique part. This ensures that each player can encrypt their choice \(E(c_i)\) such that all other players cannot decrypt it, and the combined result \(E(c)\) can only be decrypted via combining all secret key parts.</p>
@@ -178,7 +178,7 @@
 <p>To setup a game a distributed key pair is generated with each player learning their private key part. At the beginning of each hand the players initialise a list of encrypted cards currently in play \(L\). A card can be dealt using the following approach:</p>
 
 <p><ol class="article-text">
-	<li>Each player randomly chooses \(c_i \in [0,51]\), computes \(E(c_i)\) then publishes a commitment to \(E(c_i)\).</li>
+	<li>Each player randomly chooses \(c_i \in {0,...,51}\), computes \(E(c_i)\) then publishes a commitment to \(E(c_i)\).</li>
 	<li>Once all commitments have been published, each player reveals their encrypted card choices \(E(c_i)\). All players can verify that all commitments are correct, allowing any dishonest players to be excluded and the honest players to restart.</li>
 	<li>All players compute \(E(c) = E(\sum_i c_i) = \prod E(c_i)\)</li>
 	<li>The players check if \(E(c) \in L\) using an oblivious test of plaintext equality. If so, the card choice is discarded and the process restarts from step 1</li>
