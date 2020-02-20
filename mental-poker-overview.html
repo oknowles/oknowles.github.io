@@ -52,7 +52,7 @@
             	<div class="row">
                 	<div class="col-md-8 col-md-offset-2">
                     	<h1 class="brand-heading">Mental Poker</h1>
-                    	<p class="intro-text"></p>
+                    	<p class="intro-text">An overview of approaches</p>
                     	<a href="#blog-body" class="btn btn-circle page-scroll">
                         	<i class="fa fa-angle-double-down animated"></i>
                     	</a>
@@ -66,7 +66,29 @@
 	<section id="blog-body" class="container content-section text-left">
     	<div class="row">
         	<div class="col-lg-8 col-lg-offset-2">
-            	<h2>Introduction</h2>
+
+<p><i>This is the first post in a set of blog posts about mental poker. The next post can be found here: <a href="mental-poker-random-card-generation.html">Mental Poker - A deep dive into random card generation</a>.</i></p>
+
+<h2>Contents</h2>
+<ul class="article-text">
+    <li><a href="#introduction">Introduction</a></li>
+    <li><a href="#distributed-shuffle">Distributed Shuffle</a></li>
+    <ul>
+        <li><a href="#initial-shuffle">Steps to perform the initial shuffle</a></li>
+        <li><a href="#suffle-deal-down">Dealing a card face down (to a player)</a></li>
+        <li><a href="#suffle-deal-up">Dealing a card face up (to the table)</a></li>
+    </ul>
+    <li><a href="#random-card-selection">Random Card Selection</a></li>
+    <ul>
+        <li><a href="#choosing-card">Choosing the card</a></li>
+        <li><a href="#hiding-choices">Hiding the choices</a></li>
+        <li><a href="#detecting-collisions">Detecting collisions</a></li>
+        <li><a href="#random-deal-steps">Steps to choose and deal a card</a></li>
+    </ul>
+    <li><a href="#summary">Summary</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
 
 <p>Although my aspirations of becoming a trillionaire from playing online poker in my pants all day has long since died, it is still a game that interests me. Unlike most other casino games where the player is unfairly up against the house in a game of chance, poker is a game of skill with “only” the other players and the house rake to overcome.</p>
 
@@ -95,7 +117,7 @@
 </ol></p>
 
 
-<h2>Distributed Shuffle</h2>
+<h2 id="distributed-shuffle">Distributed Shuffle</h2>
 
 <p>This approach attempts to recreate the live dealing approach using a distributed shuffle via player specific encryption keys. Each player shuffles the deck, encrypts each card (thus hiding the card value) before passing on to the next player. Once every player has shuffled the deck they remove their “shuffle lock” by decrypting each card, places a “final lock” on each card by re-encrypting using a set of 52 ordered keys before passing to the next person. This process continues until the deck is in its final form, with each card encrypted by every players “final lock” for that given position.</p>
 
@@ -103,7 +125,7 @@
 
 <p>This two phase distributed shuffle provides some desirable outcomes. The shuffle-lock step ensures that, as long as a single player performs a truly random shuffle, the deck can be considered fair. That is, if any given player is happy that they performed a random shuffle then they do not need to worry about the other players performing a proper shuffle. The order locking step ensures that the deck cannot be reordered once shuffled - if a malicious player attempts to reorder the deck either before or after they have applied their ordered locks then the decryption keys will be invalid and revealing of cards will become impossible.</p>
 
-<h3>Steps to perform the initial shuffle</h3>
+<h3 id="initial-shuffle">Steps to perform the initial shuffle</h3>
 
 <p>Assuming that three players, Alice, Bob and Charlie are wanting to play a game of poker. The approach is outlined as follows:</p>
 
@@ -123,7 +145,8 @@
 
 <p>The deck is now fully encrypted and in its final form. Assuming that there is at least one non-malicious player who performs a valid shuffle, no players should have any idea about the ordering of the cards, and each card can only be decrypted by all players collectively.</p>
 
-<h3>Dealing a card face down (to a player)</h3>
+
+<h3 id="suffle-deal-down">Dealing a card face down (to a player)</h3>
 
 <p>In order to deal a card face down to a given player, all other participants share their decryption key for that card with that player. For example, if Alice is first in the order and is assigned the top two cards from the shuffled deck \((1,2)\) then Bob and Charlie would send their accompanying decryption keys to the card locks \((B_1, B_2)\) and \((C_1, C_2)\) with Alice. Alice can now see the unencrypted versions of her encrypted cards \((\alpha_1, \alpha_2)\) by utilising all decryption keys:
 
@@ -133,11 +156,13 @@
 
 <p>As only Alice knows all the decryption keys for cards \((1,2)\) then only she can see the unencrypted values. For any other player to view her cards they would have to gain access to her secret decryption keys \((A_1, A_2)\).</p>
 
-<h3>Dealing a card face up (to the table)</h3>
+
+<h3 id="suffle-deal-up">Dealing a card face up (to the table)</h3>
 
 <p>Dealing the face up table cards for the flop, turn and river is a simplified version of the above. In order to collectively reveal card \(i\), all players reveal their decryption key for card \(i\).</p>
 
-<h2>Random Card Selection</h2>
+
+<h2 id="random-card-selection">Random Card Selection</h2>
 
 <p>Clearly shuffling the deck before dealing is required in brick and mortar games - there is no way for the dealer to pluck a random card from a deck - so the shuffled deck allows them to pick a random card by selecting the top card. However in the digital world there is no physical deck and picking a random card becomes simple - we can just randomly pick a number between 0 and 51.</p>
 
@@ -147,7 +172,8 @@
 
 <p>Once these <i>simple</i> problems have been solved then dealing can be done using a similar approach to above. Player \(i\) can be dealt a card by having all other players share their decryption key with player \(i\). Thankfully, Philippe Golle has done a lot of the heavy lifting in his paper <a href="https://crypto.stanford.edu/~pgolle/papers/poker.pdf">Dealing Cards in Poker Games</a>.</p>
 
-<h3>Choosing the card</h3>
+
+<h3 id="choosing-card">Choosing the card</h3>
 
 <p>The fundamental idea behind the distributed card generation is to have each player randomly choose a card \(c_i\) in the form of a number between 0 and 51. The final random card choice \(c\) can then be determined by collecting and summing all card choices up and taking the modulo 52:
 
@@ -156,7 +182,8 @@
 
 <p>Obviously the players cannot know others choices or the final chosen card value so all values must be hidden via encryption. One way to achieve this is to use a homomorphic encryption scheme such that, for two card choices \(c_1\) and \(c_2\), \(E(c_1+c_2) = E(c_1)E(c_2)\). The ElGamal encryption scheme is multiplicatively homomorphic, meaning that \(E(xy) = E(x)E(y)\). Although this doesn’t appear helpful at first, it can be combined with some card choice mapping function \(g^{c_i}\) to transform it into an additively homomorphic scheme required above.</p>
 
-<h3>Hiding the choices</h3>
+
+<h3 id="hiding-choices">Hiding the choices</h3>
 
 <p>With the above, each player can randomly choose a card \(c_i \in {0,...,51}\) and encrypt it to get \(E(c_i)\) and hide the information. The final card choice \(c\) can be computed (ignoring modulo 52 for now) by combining all encrypted card choices:
 \[E(c) = E(\sum_i c_i) = \prod_i E(c_i)\]</p>
@@ -167,25 +194,28 @@
 
 <p>A <a href="https://en.wikipedia.org/wiki/Commitment_scheme">cryptographic commitment scheme</a> can be used to further hide each players choices. This enables each player to publicly commit to a particular encrypted card value and reveal the actual value at a later date. This adds another layer of redundancy against any attacks that allowed a player to use all other players card choices to influence their choice and determine the final card value.</p>
 
-<h3>Detecting collisions</h3>
+
+<h3 id="detecting-collisions">Detecting collisions</h3>
 
 <p>In order to preserve the secrecy of previously dealt cards, each new card generated must be randomly chosen from the entire pool of cards. This presents a problem however as the same card cannot be dealt twice. To ensure this does not happen there must be a way to detect whether an encrypted, randomly chosen card has already been dealt.</p>
 
 <p>As discussed in the Golle paper, an oblivious test of plaintext equality can be used to compare the proposed encrypted card choice value with the list of encrypted previously dealt cards. If a collision occurs then the proposed card can be discarded and the card choice process can be rerun.</p>
 
-<h3>Steps to choose and deal a card</h3>
+
+<h3 id="random-deal-steps">Steps to choose and deal a card</h3>
 
 <p>To setup a game a distributed key pair is generated with each player learning their private key part. At the beginning of each hand the players initialise a list of encrypted cards currently in play \(L\). A card can be dealt using the following approach:</p>
 
 <p><ol class="article-text">
 	<li>Each player randomly chooses \(c_i \in {0,...,51}\), computes \(E(c_i)\) then publishes a commitment to \(E(c_i)\).</li>
 	<li>Once all commitments have been published, each player reveals their encrypted card choices \(E(c_i)\). All players can verify that all commitments are correct, allowing any dishonest players to be excluded and the honest players to restart.</li>
-	<li>All players compute \(E(c) = E(\sum_i c_i) = \prod E(c_i)\)</li>
+	<li>All players compute \(E(c) = E(\sum_i c_i) = \prod_i E(c_i)\)</li>
 	<li>The players check if \(E(c) \in L\) using an oblivious test of plaintext equality. If so, the card choice is discarded and the process restarts from step 1</li>
 	<li>\(E(c)\) is added to \(L\). To deal the card face up, the players can jointly decrypt it and compute \(c \mod 52\). To deal the card face down to player \(P_j\), all other players partially decrypt \(E(c)\) using their private key part and send to \(P_j\) who can then combine all responses and privately perform the final decryption using their private key part.</li>
 </ol></p>
 
-<h2>Summary</h2>
+
+<h2 id="summary">Summary</h2>
 
 <p>Although this post is beginning to give War & Peace a run for its money, it has outlined the two basic approaches to playing mental poker. Given the requirements and properties of the game, there is one piece of technology that appears like a very good fit for this - <i>BLOCKCHAIN</i>. I plan to delve into this further in future posts. I have also left out any discussion about one glaring issue with both approaches - player dropout, however this is a rabbit hole that deserves its own post.</p>
 

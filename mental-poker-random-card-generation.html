@@ -1,0 +1,307 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+
+    	<meta charset="utf-8">
+    	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+    	<meta name="description" content="">
+    	<meta name="author" content="">
+
+    	<title>Oliver Knowles</title>
+
+    	<!-- Bootstrap Core CSS -->
+    	<link href="css/bootstrap.min.css" rel="stylesheet">
+
+    	<!-- Custom CSS -->
+    	<link href="css/grayscale.css" rel="stylesheet">
+
+    	<!-- Custom Fonts -->
+    	<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    	<link href='https://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+
+    </head>
+
+    <body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+
+    	<!-- Navigation -->
+    	<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+        	<div class="container">
+            	<!-- Collect the nav links, forms, and other content for toggling -->
+            	<div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                	<ul class="nav navbar-nav">
+                    	<!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    	<li class="hidden">
+                        	<a href="#page-top"></a>
+                    	</li>
+                    	<li>
+                        	<a class="page-scroll" href="index.html">Home</a>
+                    	</li>
+                	</ul>
+            	</div>
+            	<!-- /.navbar-collapse -->
+        	</div>
+        	<!-- /.container -->
+    	</nav>
+
+    	<!-- Intro Header -->
+    	<header id="intro-poker" class="intro">
+        	<div class="intro-body">
+            	<div class="container">
+                	<div class="row">
+                    	<div class="col-md-8 col-md-offset-2">
+                        	<h1 class="brand-heading">Mental Poker</h1>
+                        	<p class="intro-text">A deep dive into random card generation</p>
+                        	<a href="#blog-body" class="btn btn-circle page-scroll">
+                            	<i class="fa fa-angle-double-down animated"></i>
+                        	</a>
+                    	</div>
+                	</div>
+            	</div>
+        	</div>
+    	</header>
+
+    	<!-- Blog Text -->
+    	<section id="blog-body" class="container content-section text-left">
+        	<div class="row">
+            	<div class="col-lg-8 col-lg-offset-2">
+    
+    <p><i>This is the second post in a set of blog posts about mental poker. The previous post can be found here: <a href="mental-poker-overview.html">Mental Poker - An overview of approaches</a>.</i></p>
+
+    <h2>Contents</h2>
+    <ul class="article-text">
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#elgamal">The ElGamal Encryption System</a></li>
+        <ul>
+            <li><a href="#elgamal-key-gen">Key Generation</a></li>
+            <li><a href="#elgamal-encryption">Encryption</a></li>
+            <li><a href="#elgamal-decryption">Decryption</a></li>
+            <li><a href="#mapping-function">Mapping Function</a></li>
+        </ul>
+        <li><a href="#adjusting">Adjusting For A Distributed Protocol</a></li>
+        <ul>
+            <li><a href="#elgamal-key-gen">Key Generation</a></li>
+            <li><a href="#generator-selection">Selecting a safe prime and generator function</a></li>
+            <li><a href="#crypto-commitments">Cryptographic commitments</a></li>
+            <li><a href="#distributed-keygen">Distributed Key Generation</a></li>
+            <li><a href="#joint-encryption">Distributed generation of an encrypted card choice</a></li>
+            <li><a href="#joint-decryption">Distributed decryption of the card choice</a></li>
+        </ul>
+        <li><a href="#summary">Summary</a></li>
+    </ul>
+
+    <h2 id="introduction">Introduction</h2>
+
+    <p>Following on from the previous discussion about the general approaches to mental poker, this post takes a deeper look on what is actually required to randomly generate a card in a distributed way. Firstly, standard ElGamal encryption is discussed before investigating how it can be modified to work in a distributed setting.</p>
+
+    <p><i><b>Warning - Here be dragons</b>. If you are not interested in an overly verbose look into how each step could work then save yourself and get out now. If you're interesting in learning more about the maths behind random card generation then read on!</i></p>
+
+
+    <h2 id="elgamal">The ElGamal Encryption System</h2>
+
+    <p>As discussed in the previous post, the multiplicatively homomorphic property of the ElGamal encrpytion scheme is the key ingredient that enables individuals encypted card choices to be combined to form a global card choice. The standard version of ElGamal encryption is an asymmetric key encryption algorithm, hence a public and private key pair must be generated in order to encrypt and decrypt messages. In order for Bob to send Alice an encrypted message the three components must be combined:</p>
+
+
+    <h3 id="elgamal-key-gen">Key Generation</h3>
+
+    <p>ElGamal encryption is defined over a cyclic group \(G\) of order \(q\), where \(q\) is usually a large prime. In order for Alice to receive messages that only she can decrypt she must first generate the key pair as follows:</p>
+
+    <p><ol class="article-text">
+        <li>Find an efficient generator \(g\) of \(G\). That is, find some generator \(g\) such that \(G=\{g^i\}_{i=0}^q\).</li>
+        <li>Randomly choose integer \(x \in {1,...,q-1}\). This represents the private key.</li>
+        <li>Compute \(h=g^x\)</li>
+    </ol></p>
+
+    <p>The public key consists of the quadruple \((G,q,g,h)\) which is then published and becomes known to Bob. The private key \(x\) is (obviously) kept secret.</p>
+
+
+    <h3 id="elgamal-encryption">Encryption</h3>
+
+    <p>Given Bob has learned Alice's public key, he can now send her a message \(M\) via the following steps:</p>
+
+    <p><ol class="article-text">
+        <li>Map the message \(M\) to some element \(m \in G\) using some previously agreed reversible mapping function.</li>
+        <li>Randomly choose an integer \(k \in {1,...,q-1}\).</li>
+        <li>Compute the ephemeral key \(s = h^k\). This is a one time key used to encrypt the message.</li>
+        <li>Compute \(c_1 = g^k\) and \(c_2 = ms\).</li>
+    </ol></p>
+
+    <p>The ciphertext that Bob sends to Alice is the pair \((c_1,c_2)\). Note that if someone knows the mapped plaintext value \(m\) and the cipher text \((c_1,c_2)\) then they can easily work out the ephemeral key \(s\) by computing \(s = c_2m^{-1}\). Hence, as the name suggests, ephemeral key \(s\) (and \(k\) value) should be computed every time a message is sent.</p>
+
+
+    <h3 id="elgamal-decryption">Decryption</h3>
+
+    <p>Given Alice has recieved Bob's ciphertext \((c_1,c_2)\), she can decrypt it using her private key \(x\) as follows:</p>
+
+    <p><ol class="article-text">
+        <li>Compute the ephemeral key \(s = c_1x\). This holds true as \(c_1 = g^k\) and \(h = g^x\), therefore \(c_1x = g^{xk} = h^k = s\).</li>
+        <li>Compute \(s^{-1}\), representing the inverse of \(s\) in group \(G\). Due to Lagrange’s theorem this can be computed as \(c_1^{q-x}\).</li>
+        <li>Compute the mapped plaintext \(m = c_2 s^{-1}\).</li>
+        <li>Use the reversible mapping function to map \(m\) back to the original message \(M\).</li>
+    </ol></p>
+
+
+    <h3 id="mapping-function">Mapping Function</h3>
+
+    <p>As noted above, during the encryption phase any plaintext message \(M\) must be first mapped to some value \(m \in G\) in a reversible way. As \(g\) is a generator for \(G\), we know that \(g^i \in G\). Furthermore, for the application of mental poker, we know that the the plaintext messages \(M\) will always represent card choices, and hence the message space is reduced to integers in the set \(\{1,...,52\}\). Thereforewe the reverse mapping function can be acquired by simply computing the two way map from all card choices \(\{i\}_{i=1}^{52}\) to their mapped messages \(\{g^i\}_{i=1}^{52}\) and performing lookups of each \(m\) or \(M\) value when necessary.</p>
+
+
+    <h2 id="adjusting">Adjusting For A Distributed Protocol</h2>
+
+    <p>The standard ElGamal encryption scheme above assumes communication between two parties. However in the mental poker setting we have a variable number of players, usually between 2 and 8, and hence the scheme needs to be adjusted to enable joint encryption and decryption.</p>
+
+    <p>This can be achieved by creating a sharded private key which is distributed amongst all players using <a href="https://www.cryptoworkshop.com/ximix/lib/exe/fetch.php?media=pedersen.pdf">Pedersen’s protocol</a>. Given \(n\) parties, Pedersen's protocol generates a distributed ElGamal key pair with private key \(x\) defined as: 
+
+    \[x = \sum_{j=1}^n x_j \mod q\]
+
+    Each player \(P_j\) learns a unique share \(x_j\) of the distributed private key, meaning that no single players or subset of players can know the entirety of \(x\). The public key \(h\), by definition, becomes known to all players. Hence this adjustment allows all players to collectively encrypt a message \(M\) in such a way that the result can only be decrypted by all players jointly.</p>
+
+
+    <h3 id="generator-selection">Selecting a safe prime and generator function</h3>
+
+    <p>From Pedersen’s paper, the first step towards generating the ElGamal key pair is choosing a prime pair \((p,q)\) such that \(q\) divides \(p-1\). The simplest way to do this is to find a safe prime \(p\) of the form \(p=2q+1\) by repeatedly selecting a random, sufficiently large prime \(q\) until \(p=2q+1\) is also prime.</p>
+
+    <p>The next step is to choose a generator function \(g\) of a cyclic subgroup \(G\) of \(\mathbb{Z}^*_p\) such that \(G\) has order \(q\). Algorithm 4.80 from the <a href="http://cacr.uwaterloo.ca/hac/about/chap4.pdf">Handbook of Applied Cryptography</a> provides a way for us to compute a generator of \(\mathbb{Z}^*_p\):</p>
+
+    <p><blockquote>
+    <i>Input</i>: A cyclic group \(G\) of order \(n\), where \(n\) has prime factorization \(n = p_1^{e_1} p_2^{e_2}... p_k^{e_k}\)<br>
+    <i>Output</i>: A generator \(\alpha\) of \(G\)<br>
+
+    <ol>
+        <li>Choose a random element \(\alpha \in G\)</li>
+        <li>For \(i = 1,...,k\):</li><ul>
+            <li>Compute \(b ← \alpha^{n/{p_i}}\)</li>
+            <li>If \(b = 1\) then go to step 1</li></ul>
+        <li>Return \(\alpha\)</li>
+    </ol>
+    </blockquote></p>
+
+    <p>As we have \(G=\mathbb{Z}^*_p\) with order \(p-1\) we know that the prime factorisation is \(2q\). Therefore there can be at most two iterations within step 2 and hence we only have to check that the two conditions hold:
+
+    \[\alpha^{\frac{p-1}{2}} = \alpha^q \ne 1\]
+    \[\alpha^{\frac{p-1}{q}} = \alpha^2 \ne 1\]
+    </p>
+
+    <p>One final step remains: transform the generator \(\alpha\) of \(\mathbb{Z}^*_p\) into our desired generator \(g\) of \(G\). This can be achieved using the relation: 
+
+    \[g = \alpha^{\frac{p-1}{q}} \mod p\]
+    \[ = \alpha^2 \mod p\]
+
+    The above means that we now have the required \((p,q,g)\) for Pedersen's protocol. For brevity, the exact method by which these variables are decided upon between players is mainly skipped over here. A simple but not so rhobust approach is to have a random player perform the calculations and propose these, with the the players being able to validate the size and correctness of the chosen values.</p>
+
+    <p><i>Note: Seeing why this relation holds requires a quick crash course in groups and generators. \(\mathbb{Z}_n\) represents the group of integers modulo \(n\), i.e. \(\mathbb{Z}_n = \{0,1,...,n\}\). An integer \(x \in \mathbb{Z}_n\) is called a unit (and has an inverse) if the greatest common divisor of \(x\) and \(n\) is \(1\), i.e. \(\gcd(x,n)=1\). \(\mathbb{Z}_n^*\) represents the set of all units of the group \(\mathbb{Z}_n\).</i></p>
+
+    <p><i>This group is closed under modular multiplication. That is, for units \(x_1\) and \(x_2\), the element \(x_1 x_2 \mod n\) is also a unit and therefore in the group \(\mathbb{Z}_n^*\). Clearly, for some prime \(p\), we know that \(\mathbb{Z}_p^*\) has order \(p-1\) as \(\gcd(x,p) = 1 \, \forall \, x \in \{1,...,p-1\}\). 
+    </i></p>
+
+    <p><i>Given we have an efficient generator \(\alpha\) of \(\mathbb{Z}_p^*\) we know that \(\{\alpha^i\}_{i=0}^{p-1}\) describes the group \(\mathbb{Z}_p^*\). It follows that the generator \(g = \alpha^{\frac{p-1}{q}} \mod p\) describes a subgroup of \(\mathbb{Z}_p^*\) with order \(q\). The final deduction can be done using the fact that \(\mathbb{Z}_p^*\) is a cyclic group and that a subgroup of a cyclic group is itself a cyclic group. Therefore we know that \(g\) is an efficient generator of the cyclic group \(G\) with order \(q\).
+    </i></p>
+
+
+    <h3 id="crypto-commitments">Cryptographic commitments</h3>
+
+    <p>As the card choice is generated via combining each players individual card choices there is good reason to ensure that players cannot change their choice after seeing others. In reality this is unlikely as each choice is encrypted so an attacker should not be able to deduce any information to help them change their initial choice, however a second layer of protection can still be added in via cryptographic commitments. These essential lock each player into their original choice in a verifiable way, preventing any retrospective changes. It also ensures that each player has actually submitted a card choice before anyone reveals their value.</p>
+
+    <p>A commitment scheme is a two party protocol that allows a committer Alice to send an unintelligible representation of a message \(m\), denoted by \(C(m,r)\), to a receiver Bob and a later date reveal the message \(m\) (by ‘opening’ her commitment).</p>
+
+    <p>Two key properties of a commitment scheme are <i>unconditional hiding</i> and <i>computational binding</i>. That is, the following two properties should hold:
+    <ul class="article-text">
+        <li>Bob learns nothing about m until Alice decides to open her commitment \(C(m,r)\)</li>
+        <li>Once Alice publishes her commitment she is tied to the value \(m\). She cannot open her commitment to any value \(m' \ne m\).</li>
+    </ul></p>
+
+    <p>A commitment is said to be <i>non-malleable</i> if, for a given commitment \(C(m,r)\) to message \(m\), it is impossible to efficiently generate a related commitment \(C(m',r')\) for message \(m'\). This property prevents any man-in-the-middle (MIM) attacks in which a malicious user can intercept and replace Alice’s messages to Bob without Bob discovering. <i>Note that the risk of MIM attacks can be somewhat offset using other mechanisms such as end-to-end encryption of messages between parties.</i></p>
+
+    <p>One commitment scheme that shares many similarities with the ElGamal encryption scheme above is Pedersen commitments. The steps for Alice to make a Pedersen commitment to value m and send to Bob are as follows:</p>
+
+    <p><strong>Bob chooses the public parameters:</strong>
+    <ul class="article-text">
+        <li>Bob chooses prime pair \((p,q)\) and generator \(g\) of \(G\) similarly to the ElGamal steps above.</li>
+        <li>Bob chooses a private key \(x \in \{1,...,q-1\}\) and computes the public key \(h = g^x \mod p\). The values \((p,q,g,h)\) are sent to Alice.</li>
+    </ul></p>
+    
+    <p><strong>Alice makes a commitment to a value \(m\):</strong>
+    <ul class="article-text">
+        <li>Alice chooses a random integer \(r \in \{1,...,q-1\}\) and computes the commitment \(c=C(m,r)=g^m h^r \mod p\) which is then sent to Bob.</li>
+    </ul></p>
+
+    <p>At a later date, when Alice wants to open her commitment, she can send the values \((m,r)\) to Bob. Bob can then compute \(c' = C(m,r)\) using these values and verify that \(c'\) matches Alice's original commitment \(c\). If Alice attempts to change her message from the original value \(m\) then \(c' \ne c\) and Bob will know she is lying and terminate the session.</p>
+
+
+    <h3 id="distributed-keygen">Distributed Key Generation</h3>
+
+    <p>The above can now all be put together to form the protocol to generate the public and distributed private ElGamal encryption keys:</p>
+
+    <ul class="article-text">
+        <li>For each player \(P_i\):</li><ul>
+            <li>Randomly choose their private key part \(x_i \in G\)</li>
+            <li>Compute the corresponding public key part \(h_i = g^{x_i}\)</li>
+            <li>Generate random value \(r_i\) and use this to compute and broadcast the commitment to the public key part \(C_i = C(h_i,r_i)\)</li></ul>
+        <li>When all players have broadcast their commitments, each player \(P_i\) opens \(C_i\)</li>
+        <li>All players can compute the complete public key \(h = \prod_i h_i\)</li>
+    </ul>
+
+    <p>The private key is formed from the combination of all private key parts: \(x = \sum x_i \mod q\) which can only be known by someone who knows all private key parts. Therefore a ciphertext can only be decrypted if all participants work together. Furthermore, as long as there exists a player \(P_i\) that chooses their private key part \(x_i\) at random then the distribution of the private key \(x\) is computationally indistinguishable from the uniform distribution.</p>
+
+    <p><i>Note that the mental poker application somewhat simplifies the requirements of the key pair as, due to collusion, we do not require nor desire the private key to be recoverable by a subset of players. That is, no threshold scheme is required.</i></p>
+
+
+    <h3 id="joint-encryption">Distributed generation of an encrypted card choice</h3>
+
+    <p>Within the distributed key setting, encryption works similarly to normal ElGamal. The main difference is that, due to the homomorphism of the encryption scheme, a shared, unknown encrypted message by combining each players individual encrypted messages.</p>
+
+    <p>In the mental poker scenario, we have each player \(P_i\) randomly choosing their card choice \(c_i\). Using the mapping function defined above, the partial encryption of each card choice is defined as \(E(c_i) = (g^{r_i}, g^{c_i}h^{r_i})\), where \(r_i\) is \(P_i\)'s private ephemeral key and \(h\) is the shared public key.</p>
+
+    <p>The jointly encrypted final card choice \(c\) is defined as:
+
+    \[E(c) = E(\sum c_i) = \prod E(C_i) = (\prod g^{r_i}, \prod g^{c_i}h^{r_i})\]
+
+    As all arithmetic is done modulo \(p\) the final card choice \(c\) will a random card choice, unknown to all players.</p>
+
+
+    <h3 id="joint-decryption">Distributed decryption of the card choice</h3>
+
+    <p>Once \(E(c)\) has been computed, it can only be jointly decrypted by all the holders of the private key parts. For a given ciphertext \(E(c) = (\alpha, \beta)\) as above, the complete decryption of plaintext message \(m\) is defined as: 
+
+    \[m = D(\alpha, \beta) = \frac{\beta}{\alpha^x} = \frac{\beta}{\alpha^{\sum x_i}} =  \frac{\beta}{\prod \alpha^{x_i}}\]
+
+    Therefore, each player can partially decrypt the message using their private key part \(x_i\) by computing the value \(\alpha^{x_i}\). Due to the discrete logarithm problem, this value is assumed to not reveal any information about each players private key part \(x_i\). The final plaintext card choice \(c\) can be obtained by combining these partial decryptions, computing the message \(m\) and then using the previously computed set \(\{g^i\}_{i=1}^{52}\) to reverse map \(m\) to \(c\).</p>
+
+    <p>This allows the final card choice \(c\) to be either dealt face up the table, via having everyone broadcasting their partial decryptions, or to a single player \(P_j\) face down, via having all other players share their partial decryption with \(P_j\).</p>
+
+
+    <h2 id="summary">Summary</h2>
+
+    <p>Given this tidal wave of information, it should now be possible to deal a single card in a game of mental poker. Obviously there is far more to do but thankfully a lot of the heavy lifting is done. The next challenge is determining whether a subsequently generated card \(c'\) matches any cards already in play. Despite sounding simple, this task becomes quite involved as the only values available are the list of encrypted cards in play and \(E(c')\). The next blog post will aim to tackle this and move closer towards a complete mental poker protocol.</p> 
+
+            	</div>
+        	</div>
+    	</section>
+
+    	<!-- Footer -->
+    	<footer>
+        	<div class="container text-center">
+            	<p>Oliver Knowles &copy; <script>document.write((new Date).getYear()+1900)</script></p>
+        	</div>
+    	</footer>
+
+    	<!-- jQuery -->
+    	<script src="js/jquery.js"></script>
+
+    	<!-- Bootstrap Core JavaScript -->
+    	<script src="js/bootstrap.min.js"></script>
+
+    	<!-- Plugin JavaScript -->
+    	<script src="js/jquery.easing.min.js"></script>
+
+    	<!-- Custom Theme JavaScript -->
+    	<script src="js/grayscale.js"></script>
+
+    	<!-- MathJax for mathematical notation -->
+    	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    	<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    </body>
+
+    </html>
