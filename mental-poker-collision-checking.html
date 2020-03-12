@@ -1,0 +1,194 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+
+    	<meta charset="utf-8">
+    	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    	<meta name="viewport" content="width=device-width, initial-scale=1">
+    	<meta name="description" content="">
+    	<meta name="author" content="">
+
+    	<title>Oliver Knowles</title>
+
+    	<!-- Bootstrap Core CSS -->
+    	<link href="css/bootstrap.min.css" rel="stylesheet">
+
+    	<!-- Custom CSS -->
+    	<link href="css/grayscale.css" rel="stylesheet">
+
+    	<!-- Custom Fonts -->
+    	<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    	<link href='https://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+
+    </head>
+
+    <body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+
+    	<!-- Navigation -->
+    	<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+        	<div class="container">
+            	<!-- Collect the nav links, forms, and other content for toggling -->
+            	<div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                	<ul class="nav navbar-nav">
+                    	<!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    	<li class="hidden">
+                        	<a href="#page-top"></a>
+                    	</li>
+                    	<li>
+                        	<a class="page-scroll" href="index.html">Home</a>
+                    	</li>
+                	</ul>
+            	</div>
+            	<!-- /.navbar-collapse -->
+        	</div>
+        	<!-- /.container -->
+    	</nav>
+
+    	<!-- Intro Header -->
+    	<header id="intro-poker" class="intro">
+        	<div class="intro-body">
+            	<div class="container">
+                	<div class="row">
+                    	<div class="col-md-8 col-md-offset-2">
+                        	<h1 class="brand-heading">Mental Poker</h1>
+                        	<p class="intro-text">Preventing card collisions</p>
+                        	<a href="#blog-body" class="btn btn-circle page-scroll">
+                            	<i class="fa fa-angle-double-down animated"></i>
+                        	</a>
+                    	</div>
+                	</div>
+            	</div>
+        	</div>
+    	</header>
+
+    	<!-- Blog Text -->
+    	<section id="blog-body" class="container content-section text-left">
+        	<div class="row">
+            	<div class="col-lg-8 col-lg-offset-2">
+    
+    <p><i>This is the third post in a set of blog posts about mental poker. The previous post can be found here: <a href="mental-poker-random-card-generation.html">Mental Poker - A deep dive into random card generation</a>.</i></p>
+
+    <h2>Contents</h2>
+    <ul class="article-text">
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#oblivious-test">Oblivious Test of Plaintext Equality</a></li>
+        <ul>
+            <li><a href="#ciphertext-blinding">Ciphertext Blinding</a></li>
+            <li><a href="#full-protocol">Full Protocol</a></li>
+            <li><a href="#simplified-protocol">Simplified Protocol</a></li>
+        </ul>
+        <li><a href="#summary">Summary</a></li>
+    </ul>
+
+    <h2 id="introduction">Introduction</h2>
+
+    <p>The previous post examined the maths behind generating a single card within a game of mental poker, and contains the majority of the building blocks for playing an entire game. By repeating this card generation process and performing partial decryptions at the correct times, a full hand of poker can be dealt and played. However one key piece of the puzzle is missing: ensuring that the same card is not dealt twice.</p>
+
+    <p>Clearly there is the strict requirement that the current cards (non-table) cards in play must be kept secret. As a result, hence each new card must be drawn from the entire set of 52 possible cards. This necessitates a mechanism to check a generated card choice against the list of cards in play before dealing it. The real spanner in the works here is the fact that the generated card choice along with the list of current cards in play are all random ciphertexts representing the encryptions of the card values. Two separate encryptions of the same card value will not be equal and thus the ciphertexts cannot be compared directly. Clearly, the comparison can also not be achieved via decrypting then comparing as sensitive information would be revealed.</p>
+
+    <p>The collision check must instead be done via an <i>oblivious test of plaintext equality</i> which allows the players to determine whether two ciphertexts are the encryptions of the same value, but without revealing information about the plaintext values.</p>
+
+    <h2 id="oblivious-test">Oblivious Test of Plaintext Equality</h2>
+
+    <p>A protocol to achieve this is outlined in the <a href="https://link.springer.com/content/pdf/10.1007%2F3-540-44448-3_13.pdf">paper by Jakobsson and Juels</a>. The ideas in the paper nicely map to the distributed setting of mental poker and the chosen ElGamal encryption scheme described in the previous post. Given two ciphertexts \(E(m_1)=(a_1,b_1)\) and \(E(m_2)=(a_2,b_2)\), the protocol allows the joint holders of the decryption key to determine whether \(m_1=m_2\) without revealing any other information.</p>
+
+    <p>The fundamental idea behind the protocol is to combine the two ciphertexts \((a_1,b_1)\) and \((a_2,b_2)\) into a single ciphertext \((\epsilon,\gamma)=(\frac{a_1}{a_2}, \frac{b_1}{b_2})\) which has the useful property that it decrypts to 1 if, and only if, the original plaintexts \(m_1\) and \(m_2\) are equal. The combined ciphertext can be jointly decrypted by all participants using the same approach as revealing a chosen table card (explained in the previous post).</p>
+
+    <h3 id="ciphertext-blinding">Ciphertext Blinding</h3>
+
+    <p>To avoid any information leakage about the plaintext messages, each player ‘blind’ their copy of the combined ciphertext using some randomly chosen blinding exponent before performing a partial decryption.</p>
+
+    <p>More formally, given the combined ciphertext \((\epsilon,\gamma)\), each player \(P_i\) computes their blinded ciphertext \((\epsilon_i,\gamma_i)=(\epsilon^{z_i},\gamma^{z_i})\) for some randomly chosen blinding exponent \(z_i\) which is not known to any other player. All players can then jointly decrypt the ciphertext \((\epsilon',\gamma')=(\prod\epsilon_i,\prod\gamma_i)\) to perform the oblivious test of plaintext equality.</p>
+
+    <p>Performing this ciphertext blinding phase adds noise to the decryption step whilst still retaining the necessity property of decrypting to 1 if, and only if the plaintexts are equal. This can be proven as follows:</p>
+
+    <p>Using the information provided in the previous post, the two ciphertexts representing \(E(m_1)\) and \(E(m_2)\) are defined as:
+
+    \[(a_1,b_1)=(g^{r_1},h^{r_1}m_1)\]
+	\[(a_2,b_2)=(g^{r_2},h^{r_2}m_2)\] 
+
+	for some ephemeral keys \(r_1\) and \(r_2\). The initial combined ciphertext can therefore be written as:
+
+	\[
+    (\epsilon,\gamma)=(g^{r_1-r_2},h^{r_1-r_2}\frac{m_1}{m_2})=(g^{r_3},h^{r_3}\frac{m_1}{m_2})
+    \]
+
+	for some random ephemeral key \(r_3\). Clearly if \(m_1=m_2\) then \((\epsilon,\gamma)=(g^{r_3},h^{r_3})=E(1)\).</p>
+
+	<p>If we raise the combined ciphertext to a random exponent \(z\) then we have:
+
+	\[(\epsilon',\gamma')=(\epsilon^z,\gamma^z)=(g^{r_3z},h^{r_3z}(\frac{m_1}{m_2})^z)=(g^{r_4},h^{r_4}(\frac{m_1}{m_2})^z)\] 
+
+	for some random ephemeral key \(r_4\). If \(m_1=m_2\) then we have:
+
+	\[(\epsilon',\gamma')=(g^{r_4},h^{r_4})=E(1)\] 
+
+	If \(m_1 \ne m_2\) then \((\epsilon',\gamma')\) will represent the encrpytion of the message \((\frac{m_1}{m_2})^z\). Hence the necessary property still holds.</p>
+
+	<h3 id="full-protocol">Full Protocol</h3>
+
+	<p>From the paper, the full protocol to perform a distributed oblivious test of plaintext equality on two ciphertexts as above is:</p>
+
+	<ol class="article-text">
+        <li>Each player \(P_i\) uniformly randomly chooses their ‘blinding exponent’ \(z_i \in \mathbb{Z}^*_q\).</li>
+        <li>They then publish a commitment \(C_i=g^{z_i}h^{r_i}\) where \(h\) represents a generator such that \(\log_g h\) is unknown to any coalition of servers.</li>
+        <li>Each player computes \((\epsilon_i,\gamma_i)=(\epsilon^{z_i},\gamma^{z_i})\)</li>
+        <li>Each player \(P_i\) proves to the other players that \((\epsilon_i,\gamma_i)\) is well formed relative to the commitment \(C_i\). That is, they prove to the other participants that the pair \((z_i,r_i)\) are valid elements of \(\mathbb{Z}^*_q\) and map to the commitment.</li>
+        <li>All players jointly decrypt \((\epsilon',\gamma')=(\prod \epsilon_i, \prod \gamma_i)\).</li>
+        <li>If the resulting plaintext is \(1\) then the players conclude \(m_1 = m_2\), otherwise they conclude \(m_1 \ne m_2\).</li>
+    </ol>
+
+    <p>Step 4 contains a majority of the complexity of this protocol. Clearly, as the player \(P_i\) cannot reveal their chosen parameters they must employ some oblivious proof for this (<i>turtles all the way down...</i>). The paper suggests this can be achieved using a referenced protocol and a zero-knowledge proof.</p>
+
+    <p>The main purpose of these steps is to prevent a malicious party from broadcasting some random, invalid value for their blinded ciphertext in step 3. If they are able to do this then the combined ciphertext \((\epsilon',\gamma')\) will not decrypt to \(1\) and therefore any collision check between two cards will always return false.</p>
+
+    <h3 id="simplified-protocol">Simplified Protocol</h3>
+
+    <p>If we naively assume that a player will not be malicious and return an invalid value then the protocol can be greatly simplified. This is obviously not desirable but for the sake of an initial implementation it can be temporarily put aside.</p>
+
+    <p>The simplified protocol then becomes:</p>
+
+    <ol class="article-text">
+        <li>Each player \(P_i\) uniformly randomly chooses their ‘blinding exponent’ \(z_i \in \mathbb{Z}^*_q\).</li>
+        <li>Each player computes \((\epsilon_i,\gamma_i)=(\epsilon^{z_i},\gamma^{z_i})\)</li>
+        <li>All players jointly decrypt \((\epsilon',\gamma')=(\prod \epsilon_i, \prod \gamma_i)\).</li>
+        <li>If the resulting plaintext is \(1\) then the players conclude \(m_1 = m_2\), otherwise they conclude \(m_1 \ne m_2\).</li>
+    </ol>
+
+    <p>Note that it may seem like there is no edge that can be gained from such an attack as the proposed card is only decrypted and revealed <i>after</i> the collision check has been performed. However, due to the fact that a round must be voided and restarted when an invalid card is discovered, a malicious user can disrupt the collision check to attempt to force an invalid card to be dealt. For example if a player is in a large pot against another opponent and doesn't think they will win, they can force the collision check of the next dealt card to return false in an attempt to void the round and get their money back.</p>
+
+    <h2 id="summary">Summary</h2>
+
+    <p>For the benefit of the reader (read: myself) I have refrained from going into the full protocol too much. This simplified protocol gives an initial mechanism to prevent collision checking which, along with the information provided in the previous post, can be used as the building blocks of an implementation.</p>
+
+            	</div>
+        	</div>
+    	</section>
+
+    	<!-- Footer -->
+    	<footer>
+        	<div class="container text-center">
+            	<p>Oliver Knowles &copy; <script>document.write((new Date).getYear()+1900)</script></p>
+        	</div>
+    	</footer>
+
+    	<!-- jQuery -->
+    	<script src="js/jquery.js"></script>
+
+    	<!-- Bootstrap Core JavaScript -->
+    	<script src="js/bootstrap.min.js"></script>
+
+    	<!-- Plugin JavaScript -->
+    	<script src="js/jquery.easing.min.js"></script>
+
+    	<!-- Custom Theme JavaScript -->
+    	<script src="js/grayscale.js"></script>
+
+    	<!-- MathJax for mathematical notation -->
+    	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    	<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    </body>
+
+    </html>
