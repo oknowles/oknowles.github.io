@@ -63,7 +63,7 @@ small {
 
 .article-text {
     margin: 0 0 25px;
-    font-size: 18px;
+    font-size: 20px;
     line-height: 1.5;
 }
 
@@ -197,6 +197,14 @@ small {
     -o-background-size: cover;
 }
 
+#intro-lel-22 {
+    background: url(../img/lel-22-background.jpg) no-repeat bottom center scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}
+
 .intro .intro-body {
     display: table-cell;
     vertical-align: middle;
@@ -226,7 +234,7 @@ small {
 }
 
 .blog-img {
-    max-width:100%; 
+    max-width:100%;
     height:auto;
 }
 
