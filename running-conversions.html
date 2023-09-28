@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pace Converter</title>
+  <style>
+  body {
+      width: 100%;
+      height: 100%;
+      font-family: Lato,"Helvetica Neue",Helvetica,Arial,sans-serif;
+      color: #fff;
+      background-color: #000;
+  }
+
+  /* Header styles */
+  h1 {
+    text-align: center;
+    padding: 20px;
+  }
+
+  /* Box styles */
+  .container {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .container label, .container input[type="text"], .container select {
+    margin-bottom: 10px;
+  }
+
+  /* Add some basic CSS for layout */
+  .input-container {
+    display: flex;
+    align-items: center;
+    margin: 20px;
+  }
+
+  .input-container label {
+    margin-right: 10px;
+  }
+
+  .result-container {
+    display: flex;
+    align-items: center;
+    margin: 20px;
+  }
+
+  .result-container label {
+    margin-right: 10px;
+  }
+
+  /* Button styles */
+  button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+
+  /* Table styles */
+  table {
+    margin: 20px;
+    border-collapse: collapse;
+    width: 80%;
+  }
+
+  table, th, td {
+    border: 1px solid #fff;
+  }
+
+  th, td {
+    padding: 10px;
+    text-align: center;
+  }
+
+  input[type="radio"] {
+    margin-right: 5px;
+  }
+
+  </style>
+  <link href='https://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<h2>Running Pace Converter</h2>
+
+<div class="container">
+  <form id="inputForm">
+    <label>
+      <input type="radio" name="inputType" value="minutesPerKm" checked>
+      Minutes per Kilometer:
+    </label>
+    <input type="text" id="minutesPerKm" placeholder="e.g., 4:30"><br>
+
+    <label>
+      <input type="radio" name="inputType" value="minutesPerMile">
+      Minutes per Mile:
+    </label>
+    <input type="text" id="minutesPerMile" placeholder="e.g., 7:00"><br>
+
+    <label>
+      <input type="radio" name="inputType" value="commonRaceDistance">
+      Common Race Distance:
+    </label>
+    <select id="commonRaceDistance">
+      <option value="5">5 km</option>
+      <option value="8.04672">5 mile</option>
+      <option value="10">10 km</option>
+      <option value="16.0934">10 mile</option>
+      <option value="21.0975">Half Marathon</option>
+      <option value="42.195">Marathon</option>
+    </select>
+    <input type="text" id="timeInput" placeholder="e.g., 25:00"><br>
+
+    <button id="calculateButton">Calculate</button>
+
+  </form>
+</div>
+
+<h2>Race durations for given time</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Distance</th>
+      <th>Time (hh:mm:ss)</th>
+    </tr>
+  </thead>
+  <tbody id="estimatedTimes">
+    <tr>
+      <td>5 km</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>5 mile</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>10 km</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>10 mile</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Half Marathon</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Marathon</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>General pace to race times</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Pace per km</th>
+      <th>Pace per mile</th>
+      <th>5 km</th>
+      <th>5 mile</th>
+      <th>10 km</th>
+      <th>10 mile</th>
+      <th>Half marathon</th>
+      <th>Marathon</th>
+    </tr>
+  </thead>
+  <tbody id="pacesTable">
+    <!-- populated programmatically -->
+  </tbody>
+</table>
+
+<script>
+// TODO: Allow different options to be used without refreshing
+$(document).ready(function() {
+  $("#calculateButton").click(function(e) {
+    e.preventDefault();
+  });
+
+  $("#calculateButton").click(function() {
+    var paceInSeconds = 0;
+    var milePaceInput = false;
+    var convertedPace = -1;
+
+    var selectedInputType = $("input[name='inputType']:checked").val();
+
+    if (selectedInputType === "minutesPerKm" && $("#minutesPerKm").val() !== "") {
+      var paceString = $("#minutesPerKm").val();
+      var paceInSeconds = timeStringToSeconds(paceString);
+      var convertedPace = paceInSeconds * 1.60934;
+      $("#minutesPerMile").val(convertSecondsToTimeString(convertedPace));
+    } else if (selectedInputType === "minutesPerMile" && $("#minutesPerMile").val() !== "") {
+      var paceString = $("#minutesPerMile").val();
+      var paceInSeconds = timeStringToSeconds(paceString);
+      var convertedPace = paceInSeconds / 1.60934;
+      $("#minutesPerKm").val(convertSecondsToTimeString(convertedPace));
+      milePaceInput = true;
+    } else if (selectedInputType === "commonRaceDistance" && $("#commonRaceDistance").val() !== "" && $("#timeInput").val() !== "") {
+      distanceInKm = parseFloat($("#commonRaceDistance").val());
+      var timeString = $("#timeInput").val();
+      var timeInSeconds = timeStringToSeconds(timeString);
+      var paceInSeconds = timeInSeconds / distanceInKm;
+      var milePace = paceInSeconds * 1.60934;
+      $("#minutesPerKm").val(convertSecondsToTimeString(paceInSeconds));
+      $("#minutesPerMile").val(convertSecondsToTimeString(milePace));
+    }
+
+    if (paceInSeconds < 0) {
+      $("#convertedPaceResult").text("Invalid input format.");
+      return;
+    }
+
+    if (paceInSeconds == 0) {
+      return;
+    }
+
+    // Calculate estimated times for common race distances [5km, 5mile, 10km, 10mile, half marathon, marathon]
+    var distancesKm = [5, 8.04672, 10, 16.0934, 21.0975, 42.195];
+    var distancesMile = [3.10686, 5, 6.21371, 10, 13.1094, 26.2188];
+    var estimatedTimes = [];
+
+    for (var i = 0; i < distancesKm.length; i++) {
+      // Use original total seconds to avoid rounding errors during conversion
+      if (milePaceInput) {
+        var estimatedSeconds = distancesMile[i] * paceInSeconds;
+      } else {
+        var estimatedSeconds = distancesKm[i] * paceInSeconds;
+      }
+      estimatedTimes.push(convertSecondsToTimeString(estimatedSeconds));
+    }
+
+    // Update the table with estimated times
+    var distanceLabels = ["3 km", "5 km", "10 km", "10 mile", "Half Marathon", "Marathon"];
+    var $tableRows = $("#estimatedTimes tr");
+
+    for (var i = 0; i < distanceLabels.length; i++) {
+      $tableRows.eq(i).find("td:last").text(estimatedTimes[i]);
+    }
+  });
+
+  populatePacesTable();
+});
+
+function timeStringToSeconds(timeString) {
+  var parts = timeString.split(":");
+  if (parts.length < 2 || parts.length > 3) {
+    return -1;
+  }
+
+  var hours = 0;
+  var minutes = 0;
+  var seconds = 0;
+  if (parts.length == 3) {
+    hours = parseInt(parts[0], 10);
+    minutes = parseInt(parts[1], 10);
+    seconds = parseInt(parts[2], 10);
+  } else {
+    minutes = parseInt(parts[0], 10);
+    seconds = parseInt(parts[1], 10);
+  }
+  if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || hours < 0 || minutes < 0 || seconds < 0) {
+    return -1;
+  }
+
+  return (hours * 3600) + (minutes * 60) + seconds;
+}
+
+// Converts int seconds to a string of format hh:mm:ss
+function convertSecondsToTimeString(totalSeconds) {
+  var roundedSeconds = Math.round(totalSeconds);
+  var hours = Math.floor(roundedSeconds / 3600);
+  var minutes = Math.round(Math.floor(roundedSeconds / 60) % 60);
+  var seconds = Math.round(roundedSeconds % 60);
+  return (hours > 0 ? hours + ":" : "") +
+         (hours > 0 && minutes < 10 ? "0" : "") + minutes + ":" +
+         (seconds < 10 ? "0" : "") + seconds;
+}
+
+function populatePacesTable() {
+  var pacesTable = $("#pacesTable");
+  pacesTable.empty();
+
+  // Populate rows from 3 minutes per km to 7 minutes per km
+  for (var seconds = 3 * 60; seconds <= 7 * 60; seconds++) {
+    var pacePerKm = convertSecondsToTimeString(seconds);
+    var pacePerMile = convertSecondsToTimeString(seconds * 1.60934);
+    var pace5Km = convertSecondsToTimeString(seconds * 5);
+    var pace5Mile = convertSecondsToTimeString(seconds * 1.60934 * 5);
+    var pace10Km = convertSecondsToTimeString(seconds * 10);
+    var pace10Mile = convertSecondsToTimeString(seconds * 1.60934 * 10);
+    var paceHalfMarathon = convertSecondsToTimeString(seconds * 21.0975);
+    var paceMarathon = convertSecondsToTimeString(seconds * 42.195);
+
+    var row = "<tr><td>" + pacePerKm + "</td><td>" + pacePerMile + "</td><td>" + pace5Km + "</td><td>" + pace5Mile + "</td><td>" + pace10Km + "</td><td>" + pace10Mile + "</td><td>" + paceHalfMarathon + "</td><td>" + paceMarathon + "</td></tr>";
+    pacesTable.append(row);
+  }
+}
+</script>
+
+</body>
+</html>
