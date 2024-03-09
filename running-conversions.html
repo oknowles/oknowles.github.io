@@ -114,6 +114,7 @@
       <option value="10">10 km</option>
       <option value="16.0934">10 mile</option>
       <option value="21.0975">Half Marathon</option>
+      <option value="32.1869">20 mile</option>
       <option value="42.195">Marathon</option>
     </select>
     <input type="text" id="timeInput" placeholder="e.g., 25:00"><br>
@@ -153,6 +154,10 @@
       <td></td>
     </tr>
     <tr>
+      <td>20 mile</td>
+      <td></td>
+    </tr>
+    <tr>
       <td>Marathon</td>
       <td></td>
     </tr>
@@ -170,6 +175,7 @@
       <th>10 km</th>
       <th>10 mile</th>
       <th>Half marathon</th>
+      <th>20 mile</th>
       <th>Marathon</th>
     </tr>
   </thead>
@@ -222,9 +228,9 @@ $(document).ready(function() {
       return;
     }
 
-    // Calculate estimated times for common race distances [5km, 5mile, 10km, 10mile, half marathon, marathon]
-    var distancesKm = [5, 8.04672, 10, 16.0934, 21.0975, 42.195];
-    var distancesMile = [3.10686, 5, 6.21371, 10, 13.1094, 26.2188];
+    // Calculate estimated times for common race distances [5km, 5mile, 10km, 10mile, half marathon, 20mile, marathon]
+    var distancesKm = [5, 8.04672, 10, 16.0934, 21.0975, 32.1869, 42.195];
+    var distancesMile = [3.10686, 5, 6.21371, 10, 13.1094, 20, 26.2188];
     var estimatedTimes = [];
 
     for (var i = 0; i < distancesKm.length; i++) {
@@ -238,11 +244,11 @@ $(document).ready(function() {
     }
 
     // Update the table with estimated times
-    var distanceLabels = ["3 km", "5 km", "10 km", "10 mile", "Half Marathon", "Marathon"];
-    var $tableRows = $("#estimatedTimes tr");
+    var distanceLabels = ["3 km", "5 km", "10 km", "10 mile", "Half Marathon", "20 mile", "Marathon"];
+    var tableRows = $("#estimatedTimes tr");
 
     for (var i = 0; i < distanceLabels.length; i++) {
-      $tableRows.eq(i).find("td:last").text(estimatedTimes[i]);
+      tableRows.eq(i).find("td:last").text(estimatedTimes[i]);
     }
   });
 
@@ -297,9 +303,10 @@ function populatePacesTable() {
     var pace10Km = convertSecondsToTimeString(seconds * 10);
     var pace10Mile = convertSecondsToTimeString(seconds * 1.60934 * 10);
     var paceHalfMarathon = convertSecondsToTimeString(seconds * 21.0975);
+    var pace20Mile = convertSecondsToTimeString(seconds * 32.1869);
     var paceMarathon = convertSecondsToTimeString(seconds * 42.195);
 
-    var row = "<tr><td>" + pacePerKm + "</td><td>" + pacePerMile + "</td><td>" + pace5Km + "</td><td>" + pace5Mile + "</td><td>" + pace10Km + "</td><td>" + pace10Mile + "</td><td>" + paceHalfMarathon + "</td><td>" + paceMarathon + "</td></tr>";
+    var row = "<tr><td>" + pacePerKm + "</td><td>" + pacePerMile + "</td><td>" + pace5Km + "</td><td>" + pace5Mile + "</td><td>" + pace10Km + "</td><td>" + pace10Mile + "</td><td>" + paceHalfMarathon + "</td><td>" + pace20Mile + "</td><td>" + paceMarathon + "</td></tr>";
     pacesTable.append(row);
   }
 }
